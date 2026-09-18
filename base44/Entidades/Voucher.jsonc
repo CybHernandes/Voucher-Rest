@@ -1,0 +1,64 @@
+{
+  "name": "Voucher",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "title": "Nome"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "Comum",
+        "Evento",
+        "Servi\u00e7o"
+      ],
+      "default": "Comum",
+      "title": "Tipo"
+    },
+    "valor": {
+      "type": "number",
+      "title": "Valor",
+      "minimum": 0
+    },
+    "data_emitida": {
+      "type": "string",
+      "format": "date",
+      "title": "Data Emitida"
+    },
+    "data_vencimento": {
+      "type": "string",
+      "format": "date",
+      "title": "Vencimento"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ativo",
+        "resgatado",
+        "cancelado",
+        "expirado"
+      ],
+      "default": "ativo",
+      "title": "Status"
+    }
+  },
+  "required": [
+    "nome",
+    "tipo",
+    "valor",
+    "data_emitida",
+    "data_vencimento",
+    "status"
+  ],
+  "rls": {
+    "create": null,
+    "read": null,
+    "update": null,
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
