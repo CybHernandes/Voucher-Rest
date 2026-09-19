@@ -19,7 +19,7 @@ export const STATUS_STYLES = {
 
 export function calcVencimento(dataEmitida) {
   if (!dataEmitida) return "";
-  return format(addDays(parseISO(dataEmitida), 90), "yyyy-MM-dd");
+  return format(addDays(parseISO(dataEmitida), 60), "yyyy-MM-dd");
 }
 
 export function getEffectiveStatus(voucher) {

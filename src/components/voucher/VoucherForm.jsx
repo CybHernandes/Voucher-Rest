@@ -99,7 +99,7 @@ export default function VoucherForm({ onCreate }) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label className="text-xs font-semibold uppercase tracking-wide text-stone-500">Vencimento (+90 dias)</Label>
+        <Label className="text-xs font-semibold uppercase tracking-wide text-stone-500">Vencimento (+60 dias)</Label>
         <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
           <CalendarClock className="h-4 w-4 text-amber-600" />
           {formatDate(vencimento)}
