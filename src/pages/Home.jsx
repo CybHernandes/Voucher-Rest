@@ -48,23 +48,51 @@ const createInitialVouchers = () => [
   },
 ];
 
-export default function Home() {
-  const [vouchers, setVouchers] = useState(() => {
-    try {
-      const cached = localStorage.getItem(STORAGE_KEY);
-      if (cached) return JSON.parse(cached);
-    } catch {
-      // ignored
-    }
-    return createInitialVouchers();
+const getToken = () => sessionStorage.getItem("voucher_rest_token");
+
+const apiRequest = async (path, options = {}) => {
+  const token = getToken();
+  const response = await fetch(path, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers || {}),
+    },
   });
+
+  const payload = response.headers.get('content-type')?.includes('application/json')
+    ? await response.json()
+    : null;
+
+  if (!response.ok) {
+    const error = new Error(payload?.message || 'Request failed');
+    error.status = response.status;
+    error.data = payload;
+    throw error;
+  }
+
+  return payload;
+};
+
+export default function Home() {
+  const [vouchers, setVouchers] = useState([]);
   const [filter, setFilter] = useState("todos");
   const [search, setSearch] = useState("");
   const [dismissedBanner, setDismissedBanner] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(vouchers));
-  }, [vouchers]);
+    const loadVouchers = async () => {
+      try {
+        const payload = await apiRequest('/api/vouchers');
+        setVouchers(payload.vouchers || []);
+      } catch {
+        setVouchers(createInitialVouchers());
+      }
+    };
+
+    loadVouchers();
+  }, []);
 
   const filteredVouchers = useMemo(() => {
     const normalized = search.toLowerCase();
@@ -87,30 +115,47 @@ export default function Home() {
     [vouchers]
   );
 
-  const handleCreate = (payload) => {
-    const newVoucher = {
-      ...payload,
-      id: `voucher-${Date.now()}`,
-      status: "ativo",
-    };
+  const handleCreate = async (payload) => {
+    try {
+      const response = await apiRequest('/api/vouchers', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
 
-    setVouchers((current) => [newVoucher, ...current]);
+      setVouchers((current) => [response.voucher, ...current]);
+    } catch (error) {
+      console.error('Failed to create voucher:', error);
+    }
   };
 
-  const handleResgatar = (voucher) => {
-    setVouchers((current) =>
-      current.map((item) =>
-        item.id === voucher.id ? { ...item, status: "resgatado" } : item
-      )
-    );
+  const handleResgatar = async (voucher) => {
+    try {
+      const response = await apiRequest(`/api/vouchers/${voucher.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'resgatado' }),
+      });
+
+      setVouchers((current) =>
+        current.map((item) => item.id === voucher.id ? response.voucher : item)
+      );
+    } catch (error) {
+      console.error('Failed to redeem voucher:', error);
+    }
   };
 
-  const handleCancelar = (voucher) => {
-    setVouchers((current) =>
-      current.map((item) =>
-        item.id === voucher.id ? { ...item, status: "cancelado" } : item
-      )
-    );
+  const handleCancelar = async (voucher) => {
+    try {
+      const response = await apiRequest(`/api/vouchers/${voucher.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'cancelado' }),
+      });
+
+      setVouchers((current) =>
+        current.map((item) => item.id === voucher.id ? response.voucher : item)
+      );
+    } catch (error) {
+      console.error('Failed to cancel voucher:', error);
+    }
   };
 
   const handleLogout = () => {
@@ -130,6 +175,9 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-3">
+              <Button onClick={() => window.location.assign('/admin')} variant="outline" className="rounded-lg">
+                Administração
+              </Button>
               <Button onClick={() => window.location.assign('/credenciais')} variant="outline" className="rounded-lg">
                 Credenciais
               </Button>

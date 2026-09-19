@@ -4,7 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"node server/index.js\" \"vite --host 0.0.0.0\"",
+    "dev": "vite --host 0.0.0.0",
+    "dev:app": "vite --host 0.0.0.0",
+    "dev:all": "concurrently \"npm run server\" \"npm run dev:app\"",
     "server": "node server/index.js",
     "build": "vite build",
     "lint": "eslint . --quiet",
